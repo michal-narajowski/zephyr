@@ -496,6 +496,7 @@ int bt_mesh_net_send(struct bt_mesh_net_tx *tx, struct net_buf *buf,
 
 	/* Deliver to GATT Proxy Clients if necessary. */
 	if (IS_ENABLED(CONFIG_BT_MESH_GATT_PROXY) &&
+	    (bt_mesh_gatt_proxy_get() == BT_MESH_GATT_PROXY_ENABLED) &&
 	    bt_mesh_proxy_relay(&buf->b, tx->ctx->addr) &&
 	    BT_MESH_ADDR_IS_UNICAST(tx->ctx->addr)) {
 		/* Notify completion if this only went through the Mesh Proxy */

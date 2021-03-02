@@ -926,6 +926,132 @@ int bt_mesh_cfg_hb_pub_set(uint16_t net_idx, uint16_t addr,
 int bt_mesh_cfg_hb_pub_get(uint16_t net_idx, uint16_t addr,
 			   struct bt_mesh_cfg_hb_pub *pub, uint8_t *status);
 
+/** @brief Delete all group addresses in a SIG model's subscription list.
+ *
+ *  @param net_idx   Network index to encrypt with.
+ *  @param addr      Target node address.
+ *  @param elem_addr Element address the model is in.
+ *  @param mod_id    Model ID.
+ *  @param status    Status response parameter.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_mod_sub_del_all(uint16_t net_idx, uint16_t addr,
+				uint16_t elem_addr, uint16_t mod_id,
+				uint8_t *status);
+
+/** @brief Update a network key to the target node.
+ *
+ *  @param net_idx     Network index to encrypt with.
+ *  @param addr        Target node address.
+ *  @param key_net_idx Network key index.
+ *  @param net_key     Network key.
+ *  @param status      Status response parameter.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_net_key_update(uint16_t net_idx, uint16_t addr,
+			       uint16_t key_net_idx, const uint8_t net_key[16],
+			       uint8_t *status);
+
+/** @brief Update an application key to the target node.
+ *
+ *  @param net_idx     Network index to encrypt with.
+ *  @param addr        Target node address.
+ *  @param key_net_idx Network key index the application key belongs to.
+ *  @param key_app_idx Application key index.
+ *  @param app_key     Application key.
+ *  @param status      Status response parameter.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_app_key_update(uint16_t net_idx, uint16_t addr,
+			       uint16_t key_net_idx, uint16_t key_app_idx,
+			       const uint8_t app_key[16], uint8_t *status);
+
+/** @brief Set the Node Identity parameters.
+ *
+ *  @param net_idx Network index to encrypt with.
+ *  @param addr    Target node address.
+ *  @param new_identity  New identity state. Must be one of
+ *                      @ref BT_MESH_NODE_IDENTITY_STOPPED or
+ *                      @ref BT_MESH_NODE_IDENTITY_RUNNING
+ *  @param key_net_idx Network key index the application key belongs to.
+ *  @param status  Status response parameter.
+ *  @param identity Identity response parameter.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_node_identity_set(uint16_t net_idx, uint16_t addr,
+				  uint16_t key_net_idx, uint8_t new_identity,
+				  uint8_t *status, uint8_t *identity);
+
+/** @brief Get the Node Identity parameters.
+ *
+ *  @param net_idx Network index to encrypt with.
+ *  @param addr    Target node address.
+ *  @param key_net_idx Network key index the application key belongs to.
+ *  @param status  Status response parameter.
+ *  @param identity Identity response parameter. Must be one of
+ *                      @ref BT_MESH_NODE_IDENTITY_STOPPED or
+ *                      @ref BT_MESH_NODE_IDENTITY_RUNNING
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_node_identity_get(uint16_t net_idx, uint16_t addr,
+				  uint16_t key_net_idx, uint8_t *status,
+				  uint8_t *identity);
+
+/** @brief Get the Low Power Node Polltimeout parameters.
+ *
+ *  @param net_idx Network index to encrypt with.
+ *  @param addr    Target node address.
+ *  @param unicast_addr LPN unicast address.
+ *  @param polltimeout Poltimeout response parameter.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_lpn_timeout_get(uint16_t net_idx, uint16_t addr,
+				uint16_t unicast_addr, uint16_t *polltimeout);
+
+struct bt_mesh_cfg_mod_pub_va {
+	/** Application index to publish with. */
+	uint16_t  app_idx;
+	/** Friendship credential flag. */
+	bool   cred_flag;
+	/** Time To Live to publish with. */
+	uint8_t   ttl;
+	/**
+	 * Encoded publish period.
+	 * @see BT_MESH_PUB_PERIOD_100MS, BT_MESH_PUB_PERIOD_SEC,
+	 * BT_MESH_PUB_PERIOD_10SEC,
+	 * BT_MESH_PUB_PERIOD_10MIN
+	 */
+	uint8_t   period;
+	/**
+	 * Encoded transmit parameters.
+	 * @see BT_MESH_TRANSMIT
+	 */
+	uint8_t   transmit;
+	/** Publication destination address. */
+	uint8_t  addr[];
+};
+
+/** @brief Set virtual addtess for a SIG model on the target node.
+ *
+ *  @param net_idx   Network index to encrypt with.
+ *  @param addr      Target node address.
+ *  @param elem_addr Element address the model is in.
+ *  @param mod_id    Model ID.
+ *  @param pub       Publication parameters.
+ *  @param status    Status response parameter.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_mod_pub_va_set(uint16_t net_idx, uint16_t addr, uint16_t elem_addr,
+			    uint16_t mod_id, struct bt_mesh_cfg_mod_pub_va *pub,
+			    uint8_t *status);
+
 /** @brief Get the current transmission timeout value.
  *
  *  @return The configured transmission timeout in milliseconds.

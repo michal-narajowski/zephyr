@@ -122,6 +122,45 @@ static void transmit_status(struct bt_mesh_model *model,
 	state_status_u8(model, ctx, buf, OP_NET_TRANSMIT_STATUS);
 }
 
+struct krp_param {
+	uint8_t *status;
+	uint16_t net_idx;
+	uint8_t *phase;
+};
+
+static void krp_status(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
+		       struct net_buf_simple *buf)
+{
+	struct krp_param *param;
+	uint16_t net_idx;
+	uint8_t status, phase;
+
+	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
+	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
+	       bt_hex(buf->data, buf->len));
+
+	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_KRP_STATUS, ctx->addr,
+				       (void **)&param)) {
+		return;
+	}
+
+	status = net_buf_simple_pull_u8(buf);
+	net_idx = net_buf_simple_pull_le16(buf) & 0xfff;
+	phase = net_buf_simple_pull_u8(buf);
+
+	if (param->net_idx != net_idx) {
+		BT_WARN("Net Key Status key index does not match");
+		return;
+	}
+
+	if (param->status) {
+		*param->status = status;
+		*param->phase = phase;
+	}
+
+	bt_mesh_msg_ack_ctx_rx(&cli->ack_ctx);
+}
+
 struct relay_param {
 	uint8_t *status;
 	uint8_t *transmit;
@@ -811,6 +850,7 @@ const struct bt_mesh_model_op bt_mesh_cfg_cli_op[] = {
 	{ OP_NODE_IDENTITY_STATUS,   3,   node_identity_status},
 	{ OP_LPN_TIMEOUT_STATUS,     2,   lpn_timeout_status },
 	{ OP_NET_TRANSMIT_STATUS,    1,   transmit_status},
+	{ OP_KRP_STATUS,             4,   krp_status},
 	BT_MESH_MODEL_OP_END,
 };
 
@@ -952,6 +992,75 @@ int bt_mesh_cfg_beacon_get(uint16_t net_idx, uint16_t addr, uint8_t *status)
 {
 	return get_state_u8(net_idx, addr, OP_BEACON_GET, OP_BEACON_STATUS,
 			    status);
+}
+
+int bt_mesh_cfg_krp_get(uint16_t net_idx, uint16_t addr, uint16_t key_net_idx,
+			uint8_t *status, uint8_t *phase)
+{
+	BT_MESH_MODEL_BUF_DEFINE(msg, OP_KRP_GET, 2);
+	struct bt_mesh_msg_ctx ctx = {
+		.net_idx = net_idx,
+		.app_idx = BT_MESH_KEY_DEV_REMOTE,
+		.addr = addr,
+		.send_ttl = BT_MESH_TTL_DEFAULT,
+	};
+	struct krp_param param = {
+		.status = status,
+		.phase = phase,
+	};
+	int err;
+
+	err = cli_prepare(&param, OP_KRP_STATUS, addr);
+	if (err) {
+		return err;
+	}
+
+	bt_mesh_model_msg_init(&msg, OP_KRP_GET);
+	net_buf_simple_add_le16(&msg, key_net_idx);
+
+	err = bt_mesh_model_send(cli->model, &ctx, &msg, NULL, NULL);
+	if (err) {
+		BT_ERR("model_send() failed (err %d)", err);
+		bt_mesh_msg_ack_ctx_clear(&cli->ack_ctx);
+		return err;
+	}
+
+	return bt_mesh_msg_ack_ctx_wait(&cli->ack_ctx, K_MSEC(msg_timeout));
+}
+
+int bt_mesh_cfg_krp_set(uint16_t net_idx, uint16_t addr, uint16_t key_net_idx,
+			uint8_t transition, uint8_t *status, uint8_t *phase)
+{
+	BT_MESH_MODEL_BUF_DEFINE(msg, OP_KRP_SET, 3);
+	struct bt_mesh_msg_ctx ctx = {
+		.net_idx = net_idx,
+		.app_idx = BT_MESH_KEY_DEV_REMOTE,
+		.addr = addr,
+		.send_ttl = BT_MESH_TTL_DEFAULT,
+	};
+	struct krp_param param = {
+		.status = status,
+		.phase = phase,
+	};
+	int err;
+
+	err = cli_prepare(&param, OP_KRP_STATUS, addr);
+	if (err) {
+		return err;
+	}
+
+	bt_mesh_model_msg_init(&msg, OP_KRP_SET);
+	net_buf_simple_add_le16(&msg, key_net_idx);
+	net_buf_simple_add_u8(&msg, transition);
+
+	err = bt_mesh_model_send(cli->model, &ctx, &msg, NULL, NULL);
+	if (err) {
+		BT_ERR("model_send() failed (err %d)", err);
+		bt_mesh_msg_ack_ctx_clear(&cli->ack_ctx);
+		return err;
+	}
+
+	return bt_mesh_msg_ack_ctx_wait(&cli->ack_ctx, K_MSEC(msg_timeout));
 }
 
 int bt_mesh_cfg_beacon_set(uint16_t net_idx, uint16_t addr, uint8_t val, uint8_t *status)

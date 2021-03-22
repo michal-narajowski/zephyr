@@ -80,6 +80,32 @@ int bt_mesh_cfg_comp_data_get(uint16_t net_idx, uint16_t addr, uint8_t page,
  */
 int bt_mesh_cfg_beacon_get(uint16_t net_idx, uint16_t addr, uint8_t *status);
 
+/** @brief             Get the target node's network key refresh phase state.
+ *  @param net_idx     Network index to encrypt with.
+ *  @param addr        Target node address.
+ *  @param key_net_idx Network key index.
+ *  @param status      Status response parameter.
+ *  @param phase       Pointer to the Key Refresh variable to fill.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_krp_get(uint16_t net_idx, uint16_t addr, uint16_t key_net_idx,
+			uint8_t *status, uint8_t *phase);
+
+/** @brief             Set the target node's network key refresh phase parameters.
+ *  @param net_idx     Network index to encrypt with.
+ *  @param addr        Target node address.
+ *  @param key_net_idx Network key index.
+ *  @param transition  Transition parameter.
+ *  @param status      Status response parameter.
+ *  @param phase       Pointer to the new Key Refresh phase. Will return the actual
+ *                     Key Refresh phase after updating.
+ *
+ *  @return 0 on success, or (negative) error code on failure.
+ */
+int bt_mesh_cfg_krp_set(uint16_t net_idx, uint16_t addr, uint16_t key_net_idx,
+			uint8_t transition, uint8_t *status, uint8_t *phase);
+
 /** @brief Set the target node's network beacon state.
  *
  *  @param net_idx Network index to encrypt with.

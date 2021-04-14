@@ -176,9 +176,9 @@ struct bt_mesh_model_op {
 	 *  @param buf   Message buffer containing the message payload, not
 	 *               including the opcode.
 	 */
-	void (*const func)(struct bt_mesh_model *model,
-			   struct bt_mesh_msg_ctx *ctx,
-			   struct net_buf_simple *buf);
+	int (*const func)(struct bt_mesh_model *model,
+			  struct bt_mesh_msg_ctx *ctx,
+			  struct net_buf_simple *buf);
 };
 
 #define BT_MESH_MODEL_OP_1(b0) (b0)

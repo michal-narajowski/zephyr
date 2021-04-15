@@ -125,6 +125,11 @@ static int health_period_status(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	if (!bt_mesh_msg_ack_ctx_match(&health_cli->ack_ctx, OP_HEALTH_PERIOD_STATUS, ctx->addr,
 				       (void **)&param)) {
 		return -ENOENT;
@@ -150,6 +155,11 @@ static int health_attention_status(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!bt_mesh_msg_ack_ctx_match(&health_cli->ack_ctx, OP_ATTENTION_STATUS, ctx->addr,
 				       (void **)&param)) {

@@ -125,6 +125,11 @@ static int dev_comp_data_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	page = net_buf_simple_pull_u8(buf);
 	if (page != 0U) {
 		BT_DBG("Composition page %u not available", page);
@@ -347,6 +352,11 @@ static int app_key_add(struct bt_mesh_model *model,
 	uint16_t key_net_idx, key_app_idx;
 	uint8_t status;
 
+	if (buf->len != 19U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	key_idx_unpack(buf, &key_net_idx, &key_app_idx);
 
 	BT_DBG("AppIdx 0x%04x NetIdx 0x%04x", key_app_idx, key_net_idx);
@@ -362,6 +372,11 @@ static int app_key_update(struct bt_mesh_model *model,
 {
 	uint16_t key_net_idx, key_app_idx;
 	uint8_t status;
+
+	if (buf->len != 19U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	key_idx_unpack(buf, &key_net_idx, &key_app_idx);
 
@@ -399,6 +414,11 @@ static int app_key_del(struct bt_mesh_model *model,
 	uint16_t key_net_idx, key_app_idx;
 	uint8_t status;
 
+	if (buf->len != 3U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	key_idx_unpack(buf, &key_net_idx, &key_app_idx);
 
 	BT_DBG("AppIdx 0x%04x NetIdx 0x%04x", key_app_idx, key_net_idx);
@@ -422,6 +442,11 @@ static int app_key_get(struct bt_mesh_model *model,
 	uint8_t status;
 	ssize_t count;
 	int i, err;
+
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	get_idx = net_buf_simple_pull_le16(buf);
 	if (get_idx > 0xfff) {
@@ -479,6 +504,11 @@ static int beacon_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	bt_mesh_model_msg_init(&msg, OP_BEACON_STATUS);
 	net_buf_simple_add_u8(&msg, bt_mesh_beacon_enabled());
 
@@ -500,6 +530,11 @@ static int beacon_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (buf->data[0] != 0x00 && buf->data[0] != 0x01) {
 		BT_WARN("Invalid Config Beacon value 0x%02x", buf->data[0]);
@@ -530,6 +565,11 @@ static int default_ttl_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	bt_mesh_model_msg_init(&msg, OP_DEFAULT_TTL_STATUS);
 	net_buf_simple_add_u8(&msg, bt_mesh_default_ttl_get());
 
@@ -551,6 +591,11 @@ static int default_ttl_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	err = bt_mesh_default_ttl_set(buf->data[0]);
 	if (err) {
@@ -594,6 +639,11 @@ static int gatt_proxy_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	return send_gatt_proxy_status(model, ctx);
 }
 
@@ -604,6 +654,11 @@ static int gatt_proxy_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (buf->data[0] != 0x00 && buf->data[0] != 0x01) {
 		BT_WARN("Invalid GATT Proxy value 0x%02x", buf->data[0]);
@@ -626,6 +681,11 @@ static int net_transmit_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	bt_mesh_model_msg_init(&msg, OP_NET_TRANSMIT_STATUS);
 	net_buf_simple_add_u8(&msg, bt_mesh_net_transmit_get());
 
@@ -647,6 +707,11 @@ static int net_transmit_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	BT_DBG("Transmit 0x%02x (count %u interval %ums)", buf->data[0],
 	       BT_MESH_TRANSMIT_COUNT(buf->data[0]),
@@ -676,6 +741,11 @@ static int relay_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	bt_mesh_model_msg_init(&msg, OP_RELAY_STATUS);
 	net_buf_simple_add_u8(&msg, bt_mesh_relay_get());
 	net_buf_simple_add_u8(&msg, bt_mesh_relay_retransmit_get());
@@ -698,6 +768,11 @@ static int relay_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (buf->data[0] != 0x00 && buf->data[0] != 0x01) {
 		BT_WARN("Invalid Relay value 0x%02x", buf->data[0]);
@@ -769,6 +844,11 @@ static int mod_pub_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 	uint8_t *mod_id, status;
 	bool vnd;
 
+	if ((buf->len != 4U) && (buf->len != 6U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
 		BT_WARN("Prohibited element address");
@@ -816,6 +896,11 @@ static int mod_pub_set(struct bt_mesh_model *model,
 	struct bt_mesh_elem *elem;
 	uint8_t *mod_id;
 	bool vnd;
+
+	if ((buf->len != 11U) && (buf->len != 13U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -911,6 +996,11 @@ static int mod_pub_va_set(struct bt_mesh_model *model,
 	uint8_t *label_uuid;
 	uint8_t *mod_id;
 	bool vnd;
+
+	if ((buf->len != 25U) && (buf->len != 27U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1014,6 +1104,11 @@ static int mod_sub_add(struct bt_mesh_model *model,
 	uint16_t *entry;
 	bool vnd;
 
+	if ((buf->len != 6U) && (buf->len != 8U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
 		BT_WARN("Prohibited element address");
@@ -1086,6 +1181,11 @@ static int mod_sub_del(struct bt_mesh_model *model,
 	uint16_t *match;
 	uint8_t status;
 	bool vnd;
+
+	if ((buf->len != 6U) && (buf->len != 8U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1164,6 +1264,11 @@ static int mod_sub_overwrite(struct bt_mesh_model *model,
 	uint8_t status;
 	bool vnd;
 
+	if ((buf->len != 6U) && (buf->len != 8U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
 		BT_WARN("Prohibited element address");
@@ -1230,6 +1335,11 @@ static int mod_sub_del_all(struct bt_mesh_model *model,
 	uint8_t *mod_id;
 	uint8_t status;
 	bool vnd;
+
+	if ((buf->len != 4U) && (buf->len != 6U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1317,6 +1427,11 @@ static int mod_sub_get(struct bt_mesh_model *model,
 	uint16_t addr, id;
 	int err;
 
+	if (buf->len != 4U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(addr)) {
 		BT_WARN("Prohibited element address");
@@ -1374,6 +1489,11 @@ static int mod_sub_get_vnd(struct bt_mesh_model *model,
 	struct bt_mesh_elem *elem;
 	uint16_t company, addr, id;
 	int err;
+
+	if (buf->len != 6U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(addr)) {
@@ -1438,6 +1558,11 @@ static int mod_sub_va_add(struct bt_mesh_model *model,
 	uint16_t *entry;
 	uint8_t status;
 	bool vnd;
+
+	if ((buf->len != 20U) && (buf->len != 22)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1516,6 +1641,11 @@ static int mod_sub_va_del(struct bt_mesh_model *model,
 	uint8_t status;
 	bool vnd;
 
+	if ((buf->len != 20U) && (buf->len != 22)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
 		BT_WARN("Prohibited element address");
@@ -1582,6 +1712,11 @@ static int mod_sub_va_overwrite(struct bt_mesh_model *model,
 	uint8_t *mod_id;
 	uint8_t status;
 	bool vnd;
+
+	if ((buf->len != 20U) && (buf->len != 22)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1661,6 +1796,11 @@ static int net_key_add(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 	uint8_t status;
 	uint16_t idx;
 
+	if (buf->len != 18U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	idx = net_buf_simple_pull_le16(buf);
 	if (idx > 0xfff) {
 		BT_ERR("Invalid NetKeyIndex 0x%04x", idx);
@@ -1681,6 +1821,11 @@ static int net_key_update(struct bt_mesh_model *model,
 	uint8_t status;
 	uint16_t idx;
 
+	if (buf->len != 18U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	idx = net_buf_simple_pull_le16(buf);
 	if (idx > 0xfff) {
 		BT_ERR("Invalid NetKeyIndex 0x%04x", idx);
@@ -1697,6 +1842,11 @@ static int net_key_del(struct bt_mesh_model *model,
 		       struct net_buf_simple *buf)
 {
 	uint16_t del_idx;
+
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	del_idx = net_buf_simple_pull_le16(buf);
 	if (del_idx > 0xfff) {
@@ -1728,6 +1878,11 @@ static int net_key_get(struct bt_mesh_model *model,
 	uint16_t net_idx[CONFIG_BT_MESH_SUBNET_COUNT];
 	ssize_t count;
 	int i, err;
+
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	bt_mesh_model_msg_init(&msg, OP_NET_KEY_LIST);
 
@@ -1785,6 +1940,11 @@ static int node_identity_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	idx = net_buf_simple_pull_le16(buf);
 	if (idx > 0xfff) {
 		BT_ERR("Invalid NetKeyIndex 0x%04x", idx);
@@ -1806,6 +1966,11 @@ static int node_identity_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 3U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	idx = net_buf_simple_pull_le16(buf);
 	if (idx > 0xfff) {
@@ -1863,6 +2028,11 @@ static int mod_app_bind(struct bt_mesh_model *model,
 	uint8_t *mod_id, status;
 	bool vnd;
 	int err;
+
+	if ((buf->len != 6U) && (buf->len != 8U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -1925,6 +2095,11 @@ static int mod_app_unbind(struct bt_mesh_model *model,
 	bool vnd;
 	int err;
 
+	if ((buf->len != 6U) && (buf->len != 8U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
 		BT_WARN("Prohibited element address");
@@ -1984,6 +2159,11 @@ static int mod_app_get(struct bt_mesh_model *model,
 	uint16_t elem_addr;
 	bool vnd;
 	int err;
+
+	if ((buf->len != 4U) && (buf->len != 6)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	elem_addr = net_buf_simple_pull_le16(buf);
 	if (!BT_MESH_ADDR_IS_UNICAST(elem_addr)) {
@@ -2058,6 +2238,10 @@ static int node_reset(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	bt_mesh_model_msg_init(&msg, OP_NODE_RESET_STATUS);
 
@@ -2108,6 +2292,11 @@ static int friend_get(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	return send_friend_status(model, ctx);
 }
 
@@ -2118,6 +2307,11 @@ static int friend_set(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (buf->data[0] != 0x00 && buf->data[0] != 0x01) {
 		BT_WARN("Invalid Friend value 0x%02x", buf->data[0]);
@@ -2143,6 +2337,11 @@ static int lpn_timeout_get(struct bt_mesh_model *model,
 
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x lpn_addr 0x%02x",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, lpn_addr);
+
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!BT_MESH_ADDR_IS_UNICAST(lpn_addr)) {
 		BT_WARN("Invalid LPNAddress; ignoring msg");
@@ -2203,6 +2402,11 @@ static int krp_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 	uint8_t kr_phase, status;
 	uint16_t idx;
 
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	idx = net_buf_simple_pull_le16(buf);
 	if (idx > 0xfff) {
 		BT_ERR("Invalid NetKeyIndex 0x%04x", idx);
@@ -2221,6 +2425,11 @@ static int krp_set(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx,
 {
 	uint8_t phase, status;
 	uint16_t idx;
+
+	if (buf->len != 3U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	idx = net_buf_simple_pull_le16(buf);
 	phase = net_buf_simple_pull_u8(buf);
@@ -2297,6 +2506,11 @@ static int heartbeat_pub_get(struct bt_mesh_model *model,
 
 	BT_DBG("src 0x%04x", ctx->addr);
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	bt_mesh_hb_pub_get(&pub);
 
 	return hb_pub_send_status(model, ctx, STATUS_SUCCESS, &pub);
@@ -2311,6 +2525,11 @@ static int heartbeat_pub_set(struct bt_mesh_model *model,
 	uint8_t status;
 
 	BT_DBG("src 0x%04x", ctx->addr);
+
+	if (buf->len != 9U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	pub.dst = sys_le16_to_cpu(param->dst);
 	pub.count = bt_mesh_hb_pwr2(param->count_log);
@@ -2386,6 +2605,11 @@ static int heartbeat_sub_get(struct bt_mesh_model *model,
 
 	BT_DBG("src 0x%04x", ctx->addr);
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	bt_mesh_hb_sub_get(&sub);
 
 	return hb_sub_send_status(model, ctx, &sub);
@@ -2402,6 +2626,11 @@ static int heartbeat_sub_set(struct bt_mesh_model *model,
 	int err;
 
 	BT_DBG("src 0x%04x", ctx->addr);
+
+	if (buf->len != 5U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	sub_src = net_buf_simple_pull_le16(buf);
 	sub_dst = net_buf_simple_pull_le16(buf);
@@ -2468,7 +2697,7 @@ const struct bt_mesh_model_op bt_mesh_cfg_srv_op[] = {
 	{ OP_RELAY_SET,                2,   relay_set },
 	{ OP_MOD_PUB_GET,              4,   mod_pub_get },
 	{ OP_MOD_PUB_SET,              11,  mod_pub_set },
-	{ OP_MOD_PUB_VA_SET,           24,  mod_pub_va_set },
+	{ OP_MOD_PUB_VA_SET,           25,  mod_pub_va_set },
 	{ OP_MOD_SUB_ADD,              6,   mod_sub_add },
 	{ OP_MOD_SUB_VA_ADD,           20,  mod_sub_va_add },
 	{ OP_MOD_SUB_DEL,              6,   mod_sub_del },

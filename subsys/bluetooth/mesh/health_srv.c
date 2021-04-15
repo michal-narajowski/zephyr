@@ -114,6 +114,11 @@ static int health_fault_get(struct bt_mesh_model *model,
 	uint16_t company_id;
 	int err;
 
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	company_id = net_buf_simple_pull_le16(buf);
 
 	BT_DBG("company_id 0x%04x", company_id);
@@ -135,6 +140,11 @@ static int health_fault_clear_unrel(struct bt_mesh_model *model,
 	struct bt_mesh_health_srv *srv = model->user_data;
 	uint16_t company_id;
 
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	company_id = net_buf_simple_pull_le16(buf);
 
 	BT_DBG("company_id 0x%04x", company_id);
@@ -154,6 +164,11 @@ static int health_fault_clear(struct bt_mesh_model *model,
 	struct bt_mesh_health_srv *srv = model->user_data;
 	uint16_t company_id;
 	int err;
+
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	company_id = net_buf_simple_pull_le16(buf);
 
@@ -185,6 +200,11 @@ static int health_fault_test_unrel(struct bt_mesh_model *model,
 	uint16_t company_id;
 	uint8_t test_id;
 
+	if (buf->len != 3U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	test_id = net_buf_simple_pull_u8(buf);
 	company_id = net_buf_simple_pull_le16(buf);
 
@@ -208,6 +228,11 @@ static int health_fault_test(struct bt_mesh_model *model,
 	int err;
 
 	BT_DBG("");
+
+	if (buf->len != 3U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	test_id = net_buf_simple_pull_u8(buf);
 	company_id = net_buf_simple_pull_le16(buf);
@@ -263,6 +288,11 @@ static int attention_get(struct bt_mesh_model *model,
 {
 	BT_DBG("");
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	return send_attention_status(model, ctx);
 }
 
@@ -271,6 +301,11 @@ static int attention_set_unrel(struct bt_mesh_model *model,
 			       struct net_buf_simple *buf)
 {
 	uint8_t time;
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	time = net_buf_simple_pull_u8(buf);
 
@@ -285,9 +320,14 @@ static int attention_set(struct bt_mesh_model *model,
 			 struct bt_mesh_msg_ctx *ctx,
 			 struct net_buf_simple *buf)
 {
+	int err;
+
 	BT_DBG("");
 
-	attention_set_unrel(model, ctx, buf);
+	err = attention_set_unrel(model, ctx, buf);
+	if (err) {
+		return err;
+	}
 
 	return send_attention_status(model, ctx);
 }
@@ -317,6 +357,11 @@ static int health_period_get(struct bt_mesh_model *model,
 {
 	BT_DBG("");
 
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	return send_health_period_status(model, ctx);
 }
 
@@ -325,6 +370,11 @@ static int health_period_set_unrel(struct bt_mesh_model *model,
 				    struct net_buf_simple *buf)
 {
 	uint8_t period;
+
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	period = net_buf_simple_pull_u8(buf);
 	if (period > 15) {
@@ -343,9 +393,14 @@ static int health_period_set(struct bt_mesh_model *model,
 			     struct bt_mesh_msg_ctx *ctx,
 			     struct net_buf_simple *buf)
 {
+	int err;
+
 	BT_DBG("");
 
-	health_period_set_unrel(model, ctx, buf);
+	err = health_period_set_unrel(model, ctx, buf);
+	if (err) {
+		return err;
+	}
 
 	return send_health_period_status(model, ctx);
 }

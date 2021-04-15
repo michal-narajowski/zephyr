@@ -79,6 +79,11 @@ static int state_status_u8(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 1U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, expect_status, ctx->addr,
 				       (void **)&status)) {
 		return -ENOENT;
@@ -180,6 +185,11 @@ static int relay_status(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 2U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_RELAY_STATUS, ctx->addr,
 				       (void **)&param)) {
 		return -ENOENT;
@@ -197,22 +207,7 @@ static int net_transmit_status(struct bt_mesh_model *model,
 			       struct bt_mesh_msg_ctx *ctx,
 			       struct net_buf_simple *buf)
 {
-	uint8_t *status;
-
-	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
-	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
-	       bt_hex(buf->data, buf->len));
-
-	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_NET_TRANSMIT_STATUS, ctx->addr,
-				       (void **)&status)) {
-		return -ENOENT;
-	}
-
-	*status = net_buf_simple_pull_u8(buf);
-
-	bt_mesh_msg_ack_ctx_rx(&cli->ack_ctx);
-
-	return 0;
+	return state_status_u8(model, ctx, buf, OP_NET_TRANSMIT_STATUS);
 }
 
 struct net_key_param {
@@ -231,6 +226,11 @@ static int net_key_status(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 3U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_NET_KEY_STATUS, ctx->addr,
 				       (void **)&param)) {
@@ -283,6 +283,11 @@ static int net_key_list(struct bt_mesh_model *model,
 		param->keys[i++] = net_buf_simple_pull_le16(buf) & 0xfff;
 	}
 
+	if (buf->len > 0) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	*param->key_cnt = i;
 
 	bt_mesh_msg_ack_ctx_rx(&cli->ack_ctx);
@@ -295,11 +300,16 @@ static int node_reset_status(struct bt_mesh_model *model,
 			     struct net_buf_simple *buf)
 {
 	bool *param = NULL;
-	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x",
-		ctx->net_idx, ctx->app_idx, ctx->addr);
+	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x", ctx->net_idx,
+	       ctx->app_idx, ctx->addr);
 
-	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_NODE_RESET_STATUS, ctx->addr,
-				       (void **)&param)) {
+	if (buf->len != 0U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
+	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_NODE_RESET_STATUS,
+				       ctx->addr, (void **)&param)) {
 		return -ENOENT;
 	}
 
@@ -328,6 +338,11 @@ static int app_key_status(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 4U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_APP_KEY_STATUS, ctx->addr,
 				       (void **)&param)) {
@@ -392,6 +407,11 @@ static int app_key_list(struct bt_mesh_model *model,
 		param->keys[i++] = net_buf_simple_pull_le16(buf) & 0xfff;
 	}
 
+	if (buf->len > 0) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	*param->key_cnt = i;
 	if (param->status) {
 		*param->status = status;
@@ -421,6 +441,11 @@ static int mod_app_status(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if ((buf->len != 7U) && (buf->len != 9U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_MOD_APP_STATUS, ctx->addr,
 				       (void **)&param)) {
@@ -562,6 +587,11 @@ static int mod_pub_status(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if ((buf->len != 12U) && (buf->len != 14U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_MOD_PUB_STATUS, ctx->addr,
 				       (void **)&param)) {
 		return -ENOENT;
@@ -638,6 +668,11 @@ static int mod_sub_status(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if ((buf->len != 7U) && (buf->len != 9U)) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_MOD_SUB_STATUS, ctx->addr,
 				       (void **)&param)) {
@@ -727,6 +762,11 @@ static int hb_sub_status(struct bt_mesh_model *model,
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
 
+	if (buf->len != 9U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
+
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_HEARTBEAT_SUB_STATUS, ctx->addr,
 				       (void **)&param)) {
 		return -ENOENT;
@@ -760,6 +800,11 @@ static int hb_pub_status(struct bt_mesh_model *model,
 	BT_DBG("net_idx 0x%04x app_idx 0x%04x src 0x%04x len %u: %s",
 	       ctx->net_idx, ctx->app_idx, ctx->addr, buf->len,
 	       bt_hex(buf->data, buf->len));
+
+	if (buf->len != 10U) {
+		BT_ERR("The message size for the application opcode is incorrect.");
+		return -EINVAL;
+	}
 
 	if (!bt_mesh_msg_ack_ctx_match(&cli->ack_ctx, OP_HEARTBEAT_PUB_STATUS, ctx->addr,
 				       (void **)&param)) {

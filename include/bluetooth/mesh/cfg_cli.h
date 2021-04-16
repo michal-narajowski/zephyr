@@ -1038,7 +1038,7 @@ int bt_mesh_cfg_node_identity_get(uint16_t net_idx, uint16_t addr,
  *  @return 0 on success, or (negative) error code on failure.
  */
 int bt_mesh_cfg_lpn_timeout_get(uint16_t net_idx, uint16_t addr,
-				uint16_t unicast_addr, uint16_t *polltimeout);
+				uint16_t unicast_addr, uint32_t *polltimeout);
 
 struct bt_mesh_cfg_mod_pub_va {
 	/** Application index to publish with. */

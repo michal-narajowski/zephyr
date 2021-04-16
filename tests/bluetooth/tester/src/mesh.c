@@ -2127,7 +2127,7 @@ fail:
 static void config_lpn_timeout_get(uint8_t *data, uint16_t len)
 {
 	struct mesh_cfg_lpn_timeout *cmd = (void *)data;
-	uint16_t polltimeout;
+	uint32_t polltimeout;
 	int err;
 
 	LOG_DBG("");

@@ -849,7 +849,7 @@ static void composition_data_get(uint8_t *data, uint16_t len)
 {
 	struct mesh_comp_data_get *cmd = (void *)data;
 	uint8_t page;
-	struct net_buf_simple *comp = NET_BUF_SIMPLE(14);
+	struct net_buf_simple *comp = NET_BUF_SIMPLE(128);
 	int err;
 
 	LOG_DBG("");
@@ -862,6 +862,10 @@ static void composition_data_get(uint8_t *data, uint16_t len)
 		LOG_ERR("err %d", err);
 		goto fail;
 	}
+
+	tester_send(BTP_SERVICE_ID_MESH, MESH_COMP_DATA_GET, CONTROLLER_INDEX,
+		    comp->data, comp->len);
+	return;
 
 fail:
 	tester_rsp(BTP_SERVICE_ID_MESH, MESH_COMP_DATA_GET, CONTROLLER_INDEX,

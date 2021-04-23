@@ -2218,15 +2218,15 @@ fail:
 static void health_fault_test(uint8_t *data, uint16_t len)
 {
 	struct mesh_health_fault_test *cmd = (void *)data;
-	uint8_t faults;
-	size_t fault_count;
+	uint8_t faults[128];
+	size_t fault_count = 0;
 	int err;
 
 	LOG_DBG("");
 
 	if (cmd->ack) {
 		err = bt_mesh_health_fault_test(cmd->address, cmd->app_idx,
-						cmd->cid, cmd->test_id, &faults,
+						cmd->cid, cmd->test_id, faults,
 						&fault_count);
 	} else {
 		err = bt_mesh_health_fault_test(cmd->address, cmd->app_idx,
@@ -2241,7 +2241,7 @@ static void health_fault_test(uint8_t *data, uint16_t len)
 
 	if (cmd->ack) {
 		tester_send(BTP_SERVICE_ID_MESH, MESH_HEALTH_FAULT_TEST,
-			    CONTROLLER_INDEX, &faults, sizeof(faults));
+			    CONTROLLER_INDEX, faults, fault_count);
 		return;
 	}
 

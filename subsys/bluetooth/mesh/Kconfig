@@ -696,6 +696,13 @@ config BT_MESH_MODEL_EXTENSIONS
 	  Enable support for the model extension concept, allowing the Access
 	  layer to know about mesh model relationships.
 
+config BT_MESH_MODEL_EXTENSION_COUNT
+	int "Number of supported extentions"
+	range 0 65536
+	default 0
+	help
+	  Define the number of supported extension relationship between two models.
+
 if BT_SETTINGS
 
 config BT_MESH_STORE_TIMEOUT

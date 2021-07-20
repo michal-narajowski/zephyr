@@ -17,12 +17,10 @@ uint8_t bt_mesh_elem_count(void);
 /* Find local element based on unicast or group address */
 struct bt_mesh_elem *bt_mesh_elem_find(uint16_t addr);
 
-struct bt_mesh_model *bt_mesh_model_root(struct bt_mesh_model *mod);
-void bt_mesh_model_tree_walk(struct bt_mesh_model *root,
-			     enum bt_mesh_walk (*cb)(struct bt_mesh_model *mod,
-						     uint32_t depth,
-						     void *user_data),
-			     void *user_data);
+void bt_mesh_model_graph_walk(struct bt_mesh_model *root,
+			      enum bt_mesh_walk (*cb)(struct bt_mesh_model *mod, uint32_t depth,
+						      void *user_data),
+			      void *user_data);
 
 uint16_t *bt_mesh_model_find_group(struct bt_mesh_model **mod, uint16_t addr);
 

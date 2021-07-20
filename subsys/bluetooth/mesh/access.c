@@ -32,7 +32,7 @@ enum {
 	BT_MESH_MOD_BIND_PENDING = BIT(0),
 	BT_MESH_MOD_SUB_PENDING = BIT(1),
 	BT_MESH_MOD_PUB_PENDING = BIT(2),
-	BT_MESH_MOD_NEXT_IS_PARENT = BIT(3),
+	BT_MESH_MOD_VISITED = BIT(3),
 };
 
 /* Model publication information for persistent storage. */
@@ -45,6 +45,16 @@ struct mod_pub_val {
 	uint8_t  period_div:4,
 		 cred:1;
 };
+
+#ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
+struct model_extension {
+	struct bt_mesh_model *base;
+	struct bt_mesh_model *extending;
+};
+
+static struct model_extension extensions[CONFIG_BT_MESH_MODEL_EXTENSION_COUNT];
+static size_t extensions_count;
+#endif
 
 static const struct bt_mesh_comp *dev_comp;
 static uint16_t dev_primary_addr;
@@ -447,8 +457,7 @@ uint16_t *bt_mesh_model_find_group(struct bt_mesh_model **mod, uint16_t addr)
 		.addr = addr,
 	};
 
-	bt_mesh_model_tree_walk(bt_mesh_model_root(*mod),
-				find_group_mod_visitor, &ctx);
+	bt_mesh_model_graph_walk(*mod, find_group_mod_visitor, &ctx);
 
 	*mod = ctx.mod;
 	return ctx.entry;
@@ -778,79 +787,114 @@ const struct bt_mesh_comp *bt_mesh_comp_get(void)
 	return dev_comp;
 }
 
-struct bt_mesh_model *bt_mesh_model_root(struct bt_mesh_model *mod)
-{
 #ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
-	while (mod->next) {
-		mod = mod->next;
+static enum bt_mesh_walk node_visit(struct bt_mesh_model *node,
+				    enum bt_mesh_walk (*cb)(struct bt_mesh_model *mod,
+							    uint32_t depth, void *user_data),
+								uint32_t depth,
+				    void *user_data)
+{
+	int i;
+
+	node->flags |= BT_MESH_MOD_VISITED;
+
+	if (cb(node, depth, user_data) == BT_MESH_WALK_STOP) {
+		return BT_MESH_WALK_STOP;
 	}
-#endif
-	return mod;
-}
 
-void bt_mesh_model_tree_walk(struct bt_mesh_model *root,
-			     enum bt_mesh_walk (*cb)(struct bt_mesh_model *mod,
-						     uint32_t depth,
-						     void *user_data),
-			     void *user_data)
+	for (i = 0; i < extensions_count; ++i) {
+		if (extensions[i].extending != node) {
+			continue;
+		}
+
+		if (extensions[i].base->flags & BT_MESH_MOD_VISITED) {
+			continue;
+		}
+
+		if (node_visit(extensions[i].base, cb, depth + 1, user_data) ==
+		    BT_MESH_WALK_STOP) {
+			return BT_MESH_WALK_STOP;
+		}
+	}
+
+	for (i = 0; i < extensions_count; ++i) {
+		if (extensions[i].base != node) {
+			continue;
+		}
+
+		if (extensions[i].extending->flags & BT_MESH_MOD_VISITED) {
+			continue;
+		}
+
+		if (node_visit(extensions[i].extending, cb, depth + 1, user_data) ==
+		    BT_MESH_WALK_STOP) {
+			return BT_MESH_WALK_STOP;
+		}
+	}
+
+	return BT_MESH_WALK_CONTINUE;
+}
+#endif
+
+void bt_mesh_model_graph_walk(struct bt_mesh_model *node,
+			      enum bt_mesh_walk (*cb)(struct bt_mesh_model *mod, uint32_t depth,
+						      void *user_data),
+			      void *user_data)
 {
-	struct bt_mesh_model *m = root;
-	int depth = 0;
-	/* 'skip' is set to true when we ascend from child to parent node.
-	 * In that case, we want to skip calling the callback on the parent
-	 * node and we don't want to descend onto a child node as those
-	 * nodes have already been visited.
-	 */
-	bool skip = false;
-
-	do {
-		if (!skip &&
-		    cb(m, (uint32_t)depth, user_data) == BT_MESH_WALK_STOP) {
-			return;
-		}
 #ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
-		if (!skip && m->extends) {
-			m = m->extends;
-			depth++;
-		} else if (m->flags & BT_MESH_MOD_NEXT_IS_PARENT) {
-			m = m->next;
-			depth--;
-			skip = true;
-		} else {
-			m = m->next;
-			skip = false;
-		}
+	int i;
+
+	for (i = 0; i < extensions_count; ++i) {
+		extensions[i].extending->flags &= ~BT_MESH_MOD_VISITED;
+		extensions[i].base->flags &= ~BT_MESH_MOD_VISITED;
+	}
+
+	node_visit(node, cb, 0, user_data);
+#else
+	(void)cb(node, 0, user_data);
 #endif
-	} while (m && depth > 0);
 }
 
 #ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
-int bt_mesh_model_extend(struct bt_mesh_model *mod,
+int bt_mesh_model_extend(struct bt_mesh_model *extending_mod,
 			 struct bt_mesh_model *base_mod)
 {
-	/* Form a cyclical LCRS tree:
-	 * The extends-pointer points to the first child, and the next-pointer
-	 * points to the next sibling. The last sibling is marked by the
-	 * BT_MESH_MOD_NEXT_IS_PARENT flag, and its next-pointer points back to
-	 * the parent. This way, the whole tree is accessible from any node.
-	 *
-	 * We add children (extend them) by inserting them as the first child.
-	 */
-	if (base_mod->next) {
-		return -EALREADY;
+	if (extensions_count >= CONFIG_BT_MESH_MODEL_EXTENSION_COUNT) {
+		BT_ERR("Insufficient Model Extension Count %u", extensions_count);
+		return -ENOMEM;
 	}
 
-	if (mod->extends) {
-		base_mod->next = mod->extends;
-	} else {
-		base_mod->next = mod;
-		base_mod->flags |= BT_MESH_MOD_NEXT_IS_PARENT;
-	}
+	extensions[extensions_count].extending = extending_mod;
+	extensions[extensions_count].base = base_mod;
+	++extensions_count;
 
-	mod->extends = base_mod;
 	return 0;
 }
 #endif
+
+bool bt_mesh_model_is_extended(struct bt_mesh_model *model)
+{
+#ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
+	int i;
+
+	for (i = 0; i < extensions_count; ++i) {
+		if (extensions[i].base == model) {
+			return true;
+		}
+	}
+#endif
+
+	return false;
+}
+
+size_t bt_mesh_model_extension_count(void)
+{
+#ifdef CONFIG_BT_MESH_MODEL_EXTENSIONS
+	return extensions_count;
+#else
+	return 0;
+#endif
+}
 
 static int mod_set_bind(struct bt_mesh_model *mod, size_t len_rd,
 			settings_read_cb read_cb, void *cb_arg)
